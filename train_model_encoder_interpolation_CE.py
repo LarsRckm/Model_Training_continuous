@@ -107,6 +107,12 @@ def train_model_TimeSeries_paper(config):
 
     #recalculating original numbers
     i2v_dict = index_to_value_dict(config["vocab_size"], config["extra_tokens"])
+    i2v = torch.zeros(config["vocab_size"] + len(config["extra_tokens"]) + 1)
+    for k, v in i2v_dict.items():
+        if(v == "ukn"):
+            i2v[int(k)] = 0.0
+        else:
+            i2v[int(k)] = float(v)
 
     
     #loss function
@@ -153,11 +159,14 @@ def train_model_TimeSeries_paper(config):
             lossCE = loss_fn(prediction, groundTruth)                         #calculate cross-entropy-loss
             
             _, prediction_indices = torch.max(proj_output,2)
-            prediction = prediction_indices.type(torch.float32).apply_(lambda x: 0 if int(x)>vocab_size else i2v_dict[f"{int(x)}"])   #(batch, seq_len) --> float shape
+            # prediction_indices[prediction_indices > vocab_size] = 0.0
+            prediction = i2v[prediction_indices]
             prediction = prediction * div_term.unsqueeze(-1) + min_value.unsqueeze(-1)
             prediction_grad = prediction[:,1:] - prediction[:,:-1]
 
-            groundTruth = batch["groundTruth_indices"].to(device).type(torch.float32).apply_(lambda x: 0 if int(x)>vocab_size else i2v_dict[f"{int(x)}"])
+            groundTruth = batch["groundTruth"]
+            # groundTruth[groundTruth > vocab_size] = 0.0 
+            # groundTruth = i2v[groundTruth]
             groundTruth = groundTruth * div_term.unsqueeze(-1) + min_value.unsqueeze(-1)
             groundTruth_grad = groundTruth[:,1:] - groundTruth[:,:-1]
 
