@@ -107,7 +107,7 @@ def train_model_TimeSeries_paper(config):
 
     #recalculating original numbers
     i2v_dict = index_to_value_dict(config["vocab_size"], config["extra_tokens"])
-    i2v = torch.zeros(config["vocab_size"] + len(config["extra_tokens"]) + 1)
+    i2v = torch.zeros(config["vocab_size"] + len(config["extra_tokens"]) + 1).to(device)
     for k, v in i2v_dict.items():
         if(v == "ukn"):
             i2v[int(k)] = 0.0
@@ -158,7 +158,8 @@ def train_model_TimeSeries_paper(config):
             prediction = proj_output.view(-1, vocab_size)                   #(batch,seq_len, 1) --> (batch * seq_len, tgt_vocab_size)
             lossCE = loss_fn(prediction, groundTruth)                         #calculate cross-entropy-loss
             
-            _, prediction_indices = torch.max(proj_output,2).to(device)
+            _, prediction_indices = torch.max(proj_output,2)
+            prediction_indices = prediction_indices.to(device)
             # prediction_indices[prediction_indices > vocab_size] = 0.0
             prediction = i2v[prediction_indices].to(device)
             prediction = prediction * div_term.unsqueeze(-1) + min_value.unsqueeze(-1)
