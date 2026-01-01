@@ -158,13 +158,13 @@ def train_model_TimeSeries_paper(config):
             prediction = proj_output.view(-1, vocab_size)                   #(batch,seq_len, 1) --> (batch * seq_len, tgt_vocab_size)
             lossCE = loss_fn(prediction, groundTruth)                         #calculate cross-entropy-loss
             
-            _, prediction_indices = torch.max(proj_output,2)
+            _, prediction_indices = torch.max(proj_output,2).to(device)
             # prediction_indices[prediction_indices > vocab_size] = 0.0
-            prediction = i2v[prediction_indices]
+            prediction = i2v[prediction_indices].to(device)
             prediction = prediction * div_term.unsqueeze(-1) + min_value.unsqueeze(-1)
             prediction_grad = prediction[:,1:] - prediction[:,:-1]
 
-            groundTruth = batch["groundTruth"]
+            groundTruth = batch["groundTruth"].to(device)
             # groundTruth[groundTruth > vocab_size] = 0.0 
             # groundTruth = i2v[groundTruth]
             groundTruth = groundTruth * div_term.unsqueeze(-1) + min_value.unsqueeze(-1)
